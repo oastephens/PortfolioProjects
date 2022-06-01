@@ -1,0 +1,104 @@
+/*CHECKING FOR DUPLICATES*/
+SELECT
+  ride_id,
+  COUNT(ride_id) total
+FROM
+  `circular-nova-330422.trip_data_Cyclist.trip_data-12mths`
+GROUP BY
+  ride_id
+ORDER BY
+  ride_id DESC; 
+/* each ride_id shows up once*/
+
+/*removing incorrect start and end data*/
+SELECT
+  *
+FROM
+  `circular-nova-330422.trip_data_Cyclist.trip_data-12mths`
+WHERE
+  started_at > ended_at; 
+/* 85 results*/ 
+
+/*checking for nulls in member_casual and rideable_type cloumns*/
+SELECT
+  *
+FROM
+  `circular-nova-330422.trip_data_Cyclist.trip_data-12mths`
+WHERE
+  rideable_type IS NULL;
+SELECT
+  *
+FROM
+  `circular-nova-330422.trip_data_Cyclist.trip_data-12mths`
+WHERE
+  member_casual IS NULL; 
+/*0 results*/
+
+DELETE
+FROM
+  `circular-nova-330422.trip_data_Cyclist.trip_data-12mths`
+WHERE
+  started_at > ended_at; 
+/* 85 results removed*/
+
+/*Comparing total number of casual riders to annual membership holders*/
+SELECT
+  member_casual,
+  COUNT(member_casual) AS total_riders,
+FROM
+  `circular-nova-330422.trip_data_Cyclist.trip_data-12mths`
+GROUP BY
+  member_casual; 
+/* more members than casual riders*/
+  
+/*most popular days to ride by membership type*/
+SELECT
+  member_casual,
+  day_of_week,
+  COUNT(day_of_week) frequency,
+FROM
+  `circular-nova-330422.trip_data_Cyclist.trip_data-12mths`
+GROUP BY
+  member_casual,
+  day_of_week; 
+/*casual- mostly Saturday, least Tuesday; member- mostly Wednesday, least Sunday*/ 
+  
+/* How often which bike is used by which riders and when*/
+SELECT
+  member_casual,
+  day_of_week,
+  rideable_type,
+  COUNT(rideable_type) times_used
+FROM
+  `circular-nova-330422.trip_data_Cyclist.trip_data-12mths`
+GROUP BY
+  member_casual,
+  day_of_week,
+  rideable_type; 
+  
+/*max ride info*/
+SELECT
+  day_of_week,
+  member_casual,
+  MAX(SAFE.PARSE_TIME("%H:%M:%S",
+      NULLIF(ride_length,
+        "")))max_ride_length,
+FROM
+  `circular-nova-330422.trip_data_Cyclist.trip_data-12mths`
+GROUP BY
+  day_of_week,
+  member_casual; 
+  
+/* Find Average ride length*/
+SELECT
+  day_of_week,
+  member_casual,
+  AVG(TIME_DIFF(SAFE.PARSE_TIME('%T',
+        ride_length),
+      TIME '00:00:00',
+      SECOND))ride_length_seconds,
+FROM
+  `circular-nova-330422.trip_data_Cyclist.trip_data-12mths`
+GROUP BY
+  day_of_week,
+  member_casual;
