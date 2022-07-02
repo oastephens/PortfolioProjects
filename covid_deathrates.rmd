@@ -1,0 +1,67 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+# Covid-19 Death Rates
+## Determining the variables that increase chances of death
+### By: Olusegun Stephens
+
+
+## Retrieve Data
+
+We download and view the John's Hopkins data of COVID-19 cases from January to February of 2020. 
+```{r}
+rm(list=ls()) #remove remaining variables
+library(Hmisc) #import
+
+data <- read.csv("~/Coding/data analysis/Projects/Covid Data R/COVID19_line_list_data.csv")
+describe(data)
+```
+## Cleaning Data
+
+Looking at the data, we see some discrepancies on how the data was recorded, specifically in the death column. Since we know that 0 means the person survived, we can mark dates of death as 1 under another column:
+
+```{r}
+data$death_dummy <- as.integer(data$death !=0)
+unique(data$death_dummy)
+```
+## Analyzing Data
+
+Now we can confidently find our death rate.
+
+```{r}
+sum(data$death_dummy) / nrow(data)
+```
+About 5.8% of COVID-19 cases result in death. Are there any variables that could increase the chance of death?
+
+We can check age to see if the older population are more at risk. We first need to find the average age for the living and dead cases:
+
+```{r}
+dead = subset(data, death_dummy == 1)
+alive = subset(data, death_dummy == 0)
+mean(dead$age, na.rm = TRUE)
+mean(alive$age, na.rm = TRUE)
+```
+The average age of death cases is 68.6, while living cases are on average 48.1. There is a 20 year difference in the ages, but let's check to see if this is statistically significant.
+
+```{r}
+t.test(alive$age, dead$age, alternative = "two.sided", conf.level =  0.99)
+```
+We have a p-value of 2.2e-16, or less than 0.05, making these findings significant. 
+
+We can check to see if gender plays a role in the death risk as well:
+
+```{r}
+men = subset(data, gender == 'male')
+women = subset(data, gender == 'female')
+mean(men$death_dummy, na.rm = TRUE) 
+mean(women$death_dummy, na.rm = TRUE)
+
+t.test(men$death_dummy, women$death_dummy, alternative = "two.sided", conf.level =  0.99)
+```
+Men make up 8.5% of deaths and women 3.7%. We have a p-value of 0.002, which again is less than 0.05. Gender seems to play a role in the chances of surviving COVID-19.
+
+## Conclusion
+
+With our findings, it could be suggested that older men have a higher risk of death when they contract COVID-19. Though, overall the illness has a low death rate at 5%.
